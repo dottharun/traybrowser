@@ -14,13 +14,23 @@ int main() {
     const int factor = 80;
     InitWindow(factor * 16, factor * 9, "TRAYBROWSER");
 
+    // font init
+    Font scp_font = LoadFontEx(
+        "./res/ComicShannsMono/ComicShannsMonoNerdFont-Regular.otf",
+        96,
+        0,
+        0
+    );
+    Vector2 fontPosition = {100.0f, 20.0f};
+
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(DARKGRAY);
 
-        DrawText(file_content, 100, 100, 30, WHITE);
+        DrawText("website", 500, 5, 30, WHITE);
+        DrawTextEx(scp_font, file_content, fontPosition, 28, 1, WHITE);
 
         EndDrawing();
     }
