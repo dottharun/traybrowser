@@ -1,7 +1,8 @@
 SHELL := /bin/sh -xe
 
 CC = clang
-FLAGS = -Wall -Wextra
+CFLAGS = -std=c17 -Wall -Wextra -lraylib
+LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 SRC = src/main.c
 OUTDIR = out
@@ -12,7 +13,7 @@ $(shell mkdir -p $(OUTDIR))
 all: $(OUT)
 
 $(OUT): $(SRC)
-	$(CC) $(FLAGS) $< -o $@
+	$(CC) $(FLAGS) $< -o $@ $(LDFLAGS)
 
 clean:
 	rm -rf $(OUTDIR)/*
