@@ -15,6 +15,9 @@ all: $(OUT)
 $(OUT): $(SRC)
 	$(CC) $(FLAGS) $< -o $@ $(LDFLAGS)
 
+compile-db:
+	bear -- make all
+
 clean:
 	rm -rf $(OUTDIR)/*
 
