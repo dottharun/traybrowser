@@ -96,7 +96,10 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
             printf("EMIT: tok_Comment\n");
             break;
         case tok_Character:
-            printf("EMIT: tok_Character\n");
+            printf(
+                "EMIT: tok_Character: { data: %s }\n",
+                tokenizer->m_current_token.m_comment_or_char.data
+            );
             break;
         case tok_EndOfFile:
             printf("EMIT: tok_EndOfFile\n");
@@ -150,6 +153,18 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 }
                 ON('<') {
                     SWITCH_TO(tzr_TagOpen);
+                }
+                ANYTHING_ELSE {
+                    // set current_input_character as character token
+                    tokenizer->m_current_token.type = tok_Character;
+                    snprintf(
+                        tokenizer->m_current_token.m_comment_or_char.data,
+                        2, // single-char string takes 2 bytes
+                        "%c",
+                        current_input_character.value
+                    );
+                    tzr_emit_current_token(tokenizer);
+                    continue;
                 }
             }
             END_STATE

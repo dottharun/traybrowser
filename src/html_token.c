@@ -41,7 +41,7 @@ struct tok_html_token {
     // Type::Comment
     // Type::Character
     struct {
-        char* data;
+        char data[100]; // TODO: will get exceeded
     } m_comment_or_char;
 };
 
@@ -52,7 +52,7 @@ struct tok_html_token tok_make_html_token() {
         .type              = tok_Doctype,
         .m_doctype         = {"",    NULL, NULL, false},
         .m_tag             = {NULL, false, NULL},
-        .m_comment_or_char = {NULL    }
+        .m_comment_or_char = {.data = ""    }
     };
     return token;
 }
