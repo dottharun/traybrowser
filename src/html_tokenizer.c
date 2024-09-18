@@ -1,6 +1,7 @@
 #include "html_tokenizer.h"
 
 #include <assert.h>
+#include <cctype>
 #include <stdio.h>
 #include <string.h>
 
@@ -61,7 +62,7 @@ bool tzr_next_few_characters_are(
             return false;
         }
         printf("comparing codepoint: %c to %c\n", codepoint.value, str[i]);
-        if (codepoint.value != str[i]) {
+        if (toupper(codepoint.value) != toupper(str[i])) {
             return false;
         }
     }
