@@ -33,7 +33,7 @@ struct tok_html_token {
     // Type::EndTag
     // Type::StartTag
     struct {
-        char*                  tag_name;
+        char                   tag_name[100];
         bool                   self_closing;
         struct tok_attributes* attributes;
     } m_tag;
@@ -51,7 +51,7 @@ struct tok_html_token tok_make_html_token() {
     const struct tok_html_token token = {
         .type              = tok_Doctype,
         .m_doctype         = {"",    NULL, NULL, false},
-        .m_tag             = {NULL, false, NULL},
+        .m_tag             = {"", false, NULL},
         .m_comment_or_char = {.data = ""    }
     };
     return token;

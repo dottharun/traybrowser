@@ -1,7 +1,7 @@
 #include "html_tokenizer.h"
 
 #include <assert.h>
-#include <cctype>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -87,7 +87,10 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
             );
             break;
         case tok_StartTag:
-            printf("EMIT: tok_Doctype\n");
+            printf(
+                "EMIT: tok_StartTag: { tag_name: %s }\n",
+                tokenizer->m_current_token.m_tag.tag_name
+            );
             break;
         case tok_EndTag:
             printf("EMIT: tok_EndTag\n");
@@ -124,6 +127,12 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
     current_input_character = tzr_next_codepoint(tokenizer); \
     goto new_state;
 
+// SWITCH_TO without consuming
+#define RECONSUME_IN(new_state)                              \
+    printf("reconsume in: %s\n", tzr_state_name(new_state)); \
+    tokenizer->m_state = new_state;                          \
+    goto new_state;
+
 // TODO: need to expressed correctly - currently doing extra work after
 //    SWITCH_TO to correct a mistake
 #define DO_NOT_CONSUME_AFTER_SWITCHING --tokenizer->m_cursor;
@@ -131,6 +140,10 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
 #define ON(codepoint)                   \
     if (current_input_character.present \
         && current_input_character.value == codepoint)
+
+#define ON_ASCII_ALPHA                  \
+    if (current_input_character.present \
+        && isalpha(current_input_character.value))
 
 #define ON_WHITESPACE                                \
     if (current_input_character.present              \
@@ -171,6 +184,28 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
             BEGIN_STATE(tzr_TagOpen) {
                 ON('!') {
                     SWITCH_TO(tzr_MarkupDeclarationOpen);
+                }
+                ON_ASCII_ALPHA {
+                    tokenizer->m_current_token.type = tok_StartTag;
+                    // TODO: making it empty string - express it nicely
+                    tokenizer->m_current_token.m_tag.tag_name[0] = '\0';
+                    RECONSUME_IN(tzr_TagName);
+                }
+            }
+            END_STATE
+            BEGIN_STATE(tzr_TagName) {
+                ON('>') {
+                    tzr_emit_current_token(tokenizer);
+                    SWITCH_TO(tzr_Data);
+                }
+                ANYTHING_ELSE {
+                    sprintf(
+                        tokenizer->m_current_token.m_tag.tag_name,
+                        "%s%c",
+                        tokenizer->m_current_token.m_tag.tag_name,
+                        current_input_character.value
+                    );
+                    continue;
                 }
             }
             END_STATE
