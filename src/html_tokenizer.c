@@ -144,7 +144,7 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
 
 // TODO: need to expressed correctly - currently doing extra work after
 //    SWITCH_TO to correct a mistake
-#define DO_NOT_CONSUME_AFTER_SWITCHING --tokenizer->m_cursor;
+#define DO_NOT_CONSUME_AFTER_SWITCHING --tokenizer->m_cursor
 
 #define CREATE_EOF_TOKEN_AND_RETURN                 \
     tzr_create_new_token(tokenizer, tok_EndOfFile); \
@@ -237,10 +237,50 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
             }
             END_STATE
             BEGIN_STATE(tzr_MarkupDeclarationOpen) {
-                DO_NOT_CONSUME_AFTER_SWITCHING
+                DO_NOT_CONSUME_AFTER_SWITCHING;
+                if (tzr_next_few_characters_are(tokenizer, "--")) {
+                    tzr_consume(tokenizer, "--");
+                    tzr_create_new_token(tokenizer, tok_Comment);
+                    strcpy(
+                        tokenizer->m_current_token.m_comment_or_char.data,
+                        ""
+                    );
+                    SWITCH_TO(tzr_CommentStart);
+                }
                 if (tzr_next_few_characters_are(tokenizer, "DOCTYPE")) {
                     tzr_consume(tokenizer, "DOCTYPE");
                     SWITCH_TO(tzr_DOCTYPE);
+                }
+            }
+            END_STATE
+            BEGIN_STATE(tzr_CommentStart) {
+                ANYTHING_ELSE {
+                    RECONSUME_IN(tzr_Comment);
+                }
+            }
+            END_STATE
+            BEGIN_STATE(tzr_Comment) {
+                ON('-') {
+                    SWITCH_TO(tzr_CommentEndDash);
+                }
+                ANYTHING_ELSE {
+                    util_append_char_to_str(
+                        tokenizer->m_current_token.m_comment_or_char.data,
+                        current_input_character.value
+                    );
+                    continue;
+                }
+            }
+            END_STATE
+            BEGIN_STATE(tzr_CommentEndDash) {
+                ON('-') {
+                    SWITCH_TO(tzr_CommentEnd);
+                }
+            }
+            END_STATE
+            BEGIN_STATE(tzr_CommentEnd) {
+                ON('>') {
+                    SWITCH_TO(tzr_Data);
                 }
             }
             END_STATE
