@@ -56,11 +56,11 @@ bool tzr_next_few_characters_are(
     const char*                str
 ) {
     for (size_t i = 0; i < strlen(str); i++) {
-        printf("compare: %c\n", str[i]);
         tzr_opt_char codepoint = tzr_peek_codepoint(tokenizer, i);
         if (!codepoint.present) {
             return false;
         }
+        printf("comparing codepoint: %c to %c\n", codepoint.value, str[i]);
         if (codepoint.value != str[i]) {
             return false;
         }
