@@ -1,9 +1,10 @@
 #include "html_tokenizer.h"
 
+#include "util.c"
+
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
-#include <string.h>
 
 const char* tzr_state_name(enum tzr_State state) {
     switch (state) {
@@ -61,7 +62,7 @@ bool tzr_next_few_characters_are(
         if (!codepoint.present) {
             return false;
         }
-        printf("comparing codepoint: %c to %c\n", codepoint.value, str[i]);
+        // printf("comparing codepoint: %c to %c\n", codepoint.value, str[i]);
         if (toupper(codepoint.value) != toupper(str[i])) {
             return false;
         }
@@ -170,6 +171,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 ANYTHING_ELSE {
                     // set current_input_character as character token
                     tokenizer->m_current_token.type = tok_Character;
+                    // TODO: replace with something more expressive
                     snprintf(
                         tokenizer->m_current_token.m_comment_or_char.data,
                         2, // single-char string takes 2 bytes
@@ -199,9 +201,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                     SWITCH_TO(tzr_Data);
                 }
                 ANYTHING_ELSE {
-                    sprintf(
-                        tokenizer->m_current_token.m_tag.tag_name,
-                        "%s%c",
+                    util_append_char_to_str(
                         tokenizer->m_current_token.m_tag.tag_name,
                         current_input_character.value
                     );
@@ -230,10 +230,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
 
                 ANYTHING_ELSE {
                     tokenizer->m_current_token.type = tok_Doctype;
-                    snprintf(
-                        tokenizer->m_current_token.m_doctype.name,
-                        100,
-                        "%s%c",
+                    util_append_char_to_str(
                         tokenizer->m_current_token.m_doctype.name,
                         current_input_character.value
                     );
@@ -249,10 +246,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 }
                 ANYTHING_ELSE {
                     assert(tokenizer->m_current_token.type == tok_Doctype);
-                    snprintf(
-                        tokenizer->m_current_token.m_doctype.name,
-                        100,
-                        "%s%c",
+                    util_append_char_to_str(
                         tokenizer->m_current_token.m_doctype.name,
                         current_input_character.value
                     );
