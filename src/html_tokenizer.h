@@ -111,6 +111,12 @@ struct tzr_tokenizer_data {
 // constructor
 struct tzr_tokenizer_data tzr_tokenizer_data_create(const char* html);
 
+// make a new m_current_token in tokenizer
+void tzr_create_new_token(
+    struct tzr_tokenizer_data* tokenizer,
+    enum tok_Type              type
+);
+
 #define optional_type(type) \
     struct {                \
         bool present;       \

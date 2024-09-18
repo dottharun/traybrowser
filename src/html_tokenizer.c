@@ -29,6 +29,14 @@ struct tzr_tokenizer_data tzr_tokenizer_data_create(const char* html) {
     return data;
 }
 
+void tzr_create_new_token(
+    struct tzr_tokenizer_data* tokenizer,
+    enum tok_Type              type
+) {
+    tokenizer->m_current_token      = tok_make_html_token();
+    tokenizer->m_current_token.type = type;
+}
+
 // moves cursor and gives next codepoint
 tzr_opt_char tzr_next_codepoint(struct tzr_tokenizer_data* tokenizer) {
     tzr_opt_char result = {.present = false, .value = 0};
@@ -138,6 +146,11 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
 //    SWITCH_TO to correct a mistake
 #define DO_NOT_CONSUME_AFTER_SWITCHING --tokenizer->m_cursor;
 
+#define CREATE_EOF_TOKEN_AND_RETURN                 \
+    tzr_create_new_token(tokenizer, tok_EndOfFile); \
+    tzr_emit_current_token(tokenizer);              \
+    return;
+
 #define ON(codepoint)                   \
     if (current_input_character.present \
         && current_input_character.value == codepoint)
@@ -152,6 +165,8 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
             || current_input_character.value == '\a' \
             || current_input_character.value == '\f' \
             || current_input_character.value == ' '))
+
+#define ON_EOF if (!current_input_character.present)
 
 #define ANYTHING_ELSE if (1)
 
@@ -168,9 +183,11 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 ON('<') {
                     SWITCH_TO(tzr_TagOpen);
                 }
+                ON_EOF {
+                    CREATE_EOF_TOKEN_AND_RETURN;
+                }
                 ANYTHING_ELSE {
-                    // set current_input_character as character token
-                    tokenizer->m_current_token.type = tok_Character;
+                    tzr_create_new_token(tokenizer, tok_Character);
                     // TODO: replace with something more expressive
                     snprintf(
                         tokenizer->m_current_token.m_comment_or_char.data,
@@ -191,7 +208,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                     SWITCH_TO(tzr_EndTagOpen);
                 }
                 ON_ASCII_ALPHA {
-                    tokenizer->m_current_token.type = tok_StartTag;
+                    tzr_create_new_token(tokenizer, tok_StartTag);
                     // TODO: making it empty string - express it nicely
                     tokenizer->m_current_token.m_tag.tag_name[0] = '\0';
                     RECONSUME_IN(tzr_TagName);
@@ -200,8 +217,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
             END_STATE
             BEGIN_STATE(tzr_EndTagOpen) {
                 ON_ASCII_ALPHA {
-                    tokenizer->m_current_token      = tok_make_html_token();
-                    tokenizer->m_current_token.type = tok_EndTag;
+                    tzr_create_new_token(tokenizer, tok_EndTag);
                     RECONSUME_IN(tzr_TagName);
                 }
             }
@@ -240,7 +256,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 }
 
                 ANYTHING_ELSE {
-                    tokenizer->m_current_token.type = tok_Doctype;
+                    tzr_create_new_token(tokenizer, tok_Doctype);
                     util_append_char_to_str(
                         tokenizer->m_current_token.m_doctype.name,
                         current_input_character.value
