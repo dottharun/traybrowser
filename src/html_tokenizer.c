@@ -187,10 +187,21 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 ON('!') {
                     SWITCH_TO(tzr_MarkupDeclarationOpen);
                 }
+                ON('/') {
+                    SWITCH_TO(tzr_EndTagOpen);
+                }
                 ON_ASCII_ALPHA {
                     tokenizer->m_current_token.type = tok_StartTag;
                     // TODO: making it empty string - express it nicely
                     tokenizer->m_current_token.m_tag.tag_name[0] = '\0';
+                    RECONSUME_IN(tzr_TagName);
+                }
+            }
+            END_STATE
+            BEGIN_STATE(tzr_EndTagOpen) {
+                ON_ASCII_ALPHA {
+                    tokenizer->m_current_token      = tok_make_html_token();
+                    tokenizer->m_current_token.type = tok_EndTag;
                     RECONSUME_IN(tzr_TagName);
                 }
             }
