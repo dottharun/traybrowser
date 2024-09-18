@@ -24,27 +24,28 @@ struct tok_html_token {
 
     // Type::Doctype
     struct {
-        char  name[100]; // TESTING with fixed allocated strings
+        char  name[100]; // TODO: would break if any name is more than 100 chars
         char* public_identifier;
         char* system_public_identifier;
-        bool  force_quirks; // TODO: constructor default false
+        bool  force_quirks;
     } m_doctype;
 
     // Type::EndTag
     // Type::StartTag
     struct {
         char*                  tag_name;
-        bool                   self_closing; // TODO: constructor default false
-        struct tok_attributes* attributes;   // TODO: constructor default NULL
+        bool                   self_closing;
+        struct tok_attributes* attributes;
     } m_tag;
 
     // Type::Comment
     // Type::Character
     struct {
-        char* data; // TODO: constructor default NULL
+        char* data;
     } m_comment_or_char;
 };
 
+// TODO: Need to implement strings - currently everything is NULL
 // constructor
 struct tok_html_token tok_make_html_token() {
     const struct tok_html_token token = {

@@ -81,7 +81,7 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
     switch (tokenizer->m_current_token.type) {
         case tok_Doctype:
             printf(
-                "EMIT: tok_Doctype: name: %s\n",
+                "EMIT: tok_Doctype: { name: %s } \n",
                 tokenizer->m_current_token.m_doctype.name
             );
             break;
@@ -120,6 +120,10 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
     current_input_character = tzr_next_codepoint(tokenizer); \
     goto new_state;
 
+// TODO: need to expressed correctly - currently doing extra work after
+//    SWITCH_TO to correct a mistake
+#define DO_NOT_CONSUME_AFTER_SWITCHING --tokenizer->m_cursor;
+
 #define ON(codepoint)                   \
     if (current_input_character.present \
         && current_input_character.value == codepoint)
@@ -155,7 +159,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
             }
             END_STATE
             BEGIN_STATE(tzr_MarkupDeclarationOpen) {
-                --tokenizer->m_cursor;
+                DO_NOT_CONSUME_AFTER_SWITCHING
                 if (tzr_next_few_characters_are(tokenizer, "DOCTYPE")) {
                     tzr_consume(tokenizer, "DOCTYPE");
                     SWITCH_TO(tzr_DOCTYPE);
