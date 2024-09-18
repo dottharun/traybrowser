@@ -1,7 +1,8 @@
 SHELL := /bin/sh -xe
+MAKEFLAGS += -B
 
 CC = clang
-CFLAGS = -std=c17 -Wall -Wextra -Iexternal
+CFLAGS = -std=c17 -Wall -Wextra -Wno-unused-label -Wno-unused-parameter -Iexternal -g
 LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
 SRC = src/main.c

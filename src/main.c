@@ -1,14 +1,22 @@
 #include "file.c"
+#include "html_tokenizer.c"
 
 #include <raylib.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 int main() {
     // opening html file
     // must be freed after use
-    const char* path         = "./res/theproject.html";
+    const char* path         = "./res/hello.html";
     char*       file_content = read_file_to_string(path);
+
+    printf("file:\n%s", file_content);
+
+    // tokenizer testing
+    struct tzr_tokenizer_data tokenizer =
+        tzr_tokenizer_data_create(file_content);
+    printf("going to run tokenizer\n");
+
+    tzr_run(&tokenizer);
 
     // rl window init
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
@@ -27,7 +35,7 @@ int main() {
         ClearBackground(DARKGRAY);
 
         // draw something
-        DrawText("website:", 500, 5, 30, WHITE);
+        DrawText("website: ", 500, 5, 30, WHITE);
         DrawTextEx(scp_font, file_content, fontPosition, 28, 1, WHITE);
 
         EndDrawing();
