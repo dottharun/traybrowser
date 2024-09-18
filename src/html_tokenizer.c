@@ -195,8 +195,9 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
 
                 ANYTHING_ELSE {
                     tokenizer->m_current_token.type = tok_Doctype;
-                    sprintf(
+                    snprintf(
                         tokenizer->m_current_token.m_doctype.name,
+                        100,
                         "%s%c",
                         tokenizer->m_current_token.m_doctype.name,
                         current_input_character.value
@@ -213,8 +214,9 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 }
                 ANYTHING_ELSE {
                     assert(tokenizer->m_current_token.type == tok_Doctype);
-                    sprintf(
+                    snprintf(
                         tokenizer->m_current_token.m_doctype.name,
+                        100,
                         "%s%c",
                         tokenizer->m_current_token.m_doctype.name,
                         current_input_character.value
