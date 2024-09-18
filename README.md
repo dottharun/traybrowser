@@ -13,3 +13,6 @@
 # Dev Env
 - uses [bear](https://github.com/rizsotto/Bear) to build compilation_database for clang
     - `make compile-db`
+
+### Resources
+- [html spec](https://html.spec.whatwg.org/)
