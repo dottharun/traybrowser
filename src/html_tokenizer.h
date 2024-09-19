@@ -141,3 +141,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer);
 
 // helper function to stringify state of tokenizer
 const char* tzr_state_name(enum tzr_State state);
+
+// debug
+void tzr_will_switch_to(struct tzr_tokenizer_data*, enum tzr_State);
+void tzr_will_reconsume_in(struct tzr_tokenizer_data*, enum tzr_State);

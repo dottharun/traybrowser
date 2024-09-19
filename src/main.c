@@ -6,7 +6,7 @@
 int main() {
     // opening html file
     // must be freed after use
-    const char* path         = "./res/hello.html";
+    const char* path         = "./res/theproject.html";
     char*       file_content = read_file_to_string(path);
 
     printf("file:\n%s", file_content);

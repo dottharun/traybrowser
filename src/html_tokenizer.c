@@ -6,6 +6,38 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#define TOKENIZER_DEBUG
+#define TOKENIZER_TRACE
+
+// #undef TOKENIZER_DEBUG
+// #undef TOKENIZER_TRACE
+
+// debug
+void tzr_will_switch_to(
+    struct tzr_tokenizer_data* tokenizer,
+    enum tzr_State             new_state
+) {
+#ifdef TOKENIZER_DEBUG
+    printf(
+        "[%50s] Switch to    %s\n",
+        tzr_state_name(tokenizer->m_state),
+        tzr_state_name(new_state)
+    );
+#endif
+}
+void tzr_will_reconsume_in(
+    struct tzr_tokenizer_data* tokenizer,
+    enum tzr_State             new_state
+) {
+#ifdef TOKENIZER_TRACE
+    printf(
+        "[%50s] Reconsume in %s\n",
+        tzr_state_name(tokenizer->m_state),
+        tzr_state_name(new_state)
+    );
+#endif
+}
+
 const char* tzr_state_name(enum tzr_State state) {
     switch (state) {
 #define __ENUMERATE_TOKENIZER_STATE(state) \
@@ -88,38 +120,61 @@ void tzr_consume(struct tzr_tokenizer_data* tokenizer, const char* str) {
 }
 
 void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
+    char builder[100];
     switch (tokenizer->m_current_token.type) {
         case tok_Doctype:
-            printf(
-                "EMIT: tok_Doctype: { name: %s } \n",
+            snprintf(
+                builder,
+                100,
+                "tok_Doctype { name: %s }",
                 tokenizer->m_current_token.m_doctype.name
             );
             break;
         case tok_StartTag:
-            printf(
-                "EMIT: tok_StartTag: { tag_name: %s }\n",
+            snprintf(
+                builder,
+                100,
+                "tok_StartTag { tag_name: %s }",
                 tokenizer->m_current_token.m_tag.tag_name
             );
             break;
         case tok_EndTag:
-            printf("EMIT: tok_EndTag\n");
+            snprintf(
+                builder,
+                100,
+                "tok_EndTag { tag_name: %s }",
+                tokenizer->m_current_token.m_tag.tag_name
+            );
             break;
         case tok_Comment:
-            printf("EMIT: tok_Comment\n");
+            snprintf(
+                builder,
+                100,
+                "tok_Comment { data: %s }",
+                tokenizer->m_current_token.m_comment_or_char.data
+            );
             break;
         case tok_Character:
-            printf(
-                "EMIT: tok_Character: { data: %s }\n",
+            snprintf(
+                builder,
+                100,
+                "tok_Character { data: %s }",
                 tokenizer->m_current_token.m_comment_or_char.data
             );
             break;
         case tok_EndOfFile:
-            printf("EMIT: tok_EndOfFile\n");
+            strcpy(builder, "tok_EndOfFile");
             break;
         default:
             assert(0 && "should not be reached\n");
             break;
     }
+
+    printf(
+        "[%50s] EMIT         %s\n",
+        tzr_state_name(tokenizer->m_state),
+        builder
+    );
 }
 
 #define BEGIN_STATE(state) \
@@ -131,15 +186,15 @@ void tzr_emit_current_token(struct tzr_tokenizer_data* tokenizer) {
     break;
 
 #define SWITCH_TO(new_state)                                 \
-    printf("switch to: %s\n", tzr_state_name(new_state));    \
+    tzr_will_switch_to(tokenizer, new_state);                \
     tokenizer->m_state      = new_state;                     \
     current_input_character = tzr_next_codepoint(tokenizer); \
     goto new_state;
 
 // SWITCH_TO without consuming
-#define RECONSUME_IN(new_state)                              \
-    printf("reconsume in: %s\n", tzr_state_name(new_state)); \
-    tokenizer->m_state = new_state;                          \
+#define RECONSUME_IN(new_state)                  \
+    tzr_will_reconsume_in(tokenizer, new_state); \
+    tokenizer->m_state = new_state;              \
     goto new_state;
 
 // TODO: need to expressed correctly - currently doing extra work after
@@ -209,8 +264,7 @@ void tzr_run(struct tzr_tokenizer_data* tokenizer) {
                 }
                 ON_ASCII_ALPHA {
                     tzr_create_new_token(tokenizer, tok_StartTag);
-                    // TODO: making it empty string - express it nicely
-                    tokenizer->m_current_token.m_tag.tag_name[0] = '\0';
+                    strcpy(tokenizer->m_current_token.m_tag.tag_name, "");
                     RECONSUME_IN(tzr_TagName);
                 }
             }
