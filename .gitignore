@@ -1,6 +1,7 @@
 out/
 external/
 
-#clang
+#clang, ccls
+.ccls-cache/
 .cache/
 compile_commands.json
